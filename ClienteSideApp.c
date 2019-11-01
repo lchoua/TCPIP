@@ -7,17 +7,19 @@
 #include <netinet/in.h> 
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <netdb.h>
+#include <string.h>
 
 
 int main(int argc, char const *argv[]){
 
-    int origin_socket, err,i, start, end;
-    int serverIPAddress[4] = {};
+    int origin_socket, err,i, start, end, j;
+    //int serverIPAddress[4] = {};
     char hostname[100];
     struct sockaddr_in sa = {0};
     struct hostent *host;
-    start =1100; //Puerto de incio del escaneo
-    end=1200;   //Puerto de fin del escaneo
+    start =0; //Puerto de incio del escaneo
+    end=100;   //Puerto de fin del escaneo
 /*
     //Ingreso la IP con verficacion que no se ingresen numeros invalidos
     do{
@@ -31,43 +33,58 @@ int main(int argc, char const *argv[]){
         printf("%c", hostname[i]);
     }
 */
-    printf("Ingrese la direccion IP: ");
+    printf("Ingrese la direccion IP (o el nombre) del servidor: ");
     gets(hostname);
+    printf("El usuario ingreso %s\n", hostname);
+    //Compruebo si ingreso una direccion IP o un nombre
+     if(isdigit(hostname[0])){
+            printf("\n Se ha ingresado una direccion IP...\n");
+            sa.sin_addr.s_addr = inet_addr(hostname);
+        }else{
+            printf("\n Se ha ingresado un nombre...");
+            printf("\n Relizando la traduccion de nombre\n");
+            if((host = gethostbyname(hostname)) != 0){
+                printf("Traduccion correcta");
+                puts(host->h_name);
+                printf("Traduccion:%s",host->h_name);
+            }else{
+                herror("gethostbyname");
+            }
+        }
+ 
+    
 
    //strncpy((char*)(struct sockaddr*) &sa , "" , sizeof sa);
    //memccpy(&sa.sin_addr, hostname, sizeof(hostname));
    
     
 
-    printf("\nEmpezando el escaneo de puertos: \n");
+    printf("\nEmpezando el escaneo de puertos entre el %d y el %d: \n", start, end);
     for( i = start ; i <= end ; i++) 
     {
         //Creamos el Socket para IPv4 del tipo Stream
         origin_socket = socket(AF_INET , SOCK_STREAM , 0);
 
         //Chequeo que el usuario haya ingresado una direccion IP y la asigno en la estructura
-        if(isdigit(hostname[0])){
-            sa.sin_addr.s_addr = inet_addr(hostname);
-        }
+       
         //En la estructura asigno IPv4
         sa.sin_family = AF_INET;
         //Selecciono el puerto a verificar
         sa.sin_port = htons(i);
         printf("\nComprobando puerto %d\n", i);
-        //Establezo la conexion con el Socket
+        //Establezo la conexion con el Socket, err = 0 siginifca que pudo establecer la conexion.
         err = connect(origin_socket ,(struct sockaddr *) &sa , sizeof (sa));
+        
         //Si la conexion fue exitosa muestro que puerto esta abierto, al encontrar un puerto abierto finalizo el escaneo
         if(err != -1){
             char host[128];
             char service[128];
             getnameinfo((struct sockaddr *)&sa, sizeof sa, host, (sizeof host), service, sizeof service, 0);
             printf("\nPort : %d, Service : %s, Open\n", i, service);
-            exit(1); 
+            //exit(1); 
         }
-        close(origin_socket);
         
-
-
+        
         /*
         //Check whether socket created fine or nots
         if(origin_socket < 0) 
@@ -90,10 +107,11 @@ int main(int argc, char const *argv[]){
             printf("%-5d open\n",i);
         }
         */
-        //close(origin_socket);
+        close(origin_socket);
     }
    
     return 0;
 }
+
 
 
