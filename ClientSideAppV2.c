@@ -10,29 +10,36 @@
 //Crear el socket para comunicarse con el servidor
 short SocketCreate(void)
 {
-
-        short hSocket;
-        printf("Creamos el socket.\n");
-        hSocket = socket(AF_INET, SOCK_STREAM, 0);
+		short hSocket;
+		hSocket = socket(AF_INET, SOCK_STREAM, 0);
         return hSocket;
 }
 
 //tratamos de conectarnos con el servidor
-int SocketConnect(int hSocket)
+int SocketConnect(int hSocket, int hostAddress)
 {
-
-        int returnValue=-1;
-        int ServerPort = 90190;     // hay que cambiar, por el escaneo de puertos
-        struct sockaddr_in remoteAddr={0};
-
-        remoteAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); //Local Host
-        remoteAddr.sin_family = AF_INET;   //IPv4
-        remoteAddr.sin_port = htons(ServerPort);
-
-        returnValue = connect(hSocket , (struct sockaddr *)&remoteAddr , sizeof(struct sockaddr_in));
-
-
-        return returnValue;
+		int i, start=1100, end=1200;
+		int returnValue=-1;
+		struct sockaddr_in remoteAddr={0};
+		printf("\nEmpezando el escaneo de puertos entre el %d y el %d: \n", start, end);
+    	for( i = start ; i <= end ; i++) 
+    		{
+				remoteAddr.sin_addr.s_addr = inet_addr(hostAddress); //Local Host
+        		remoteAddr.sin_family = AF_INET;   //IPv4
+        		remoteAddr.sin_port = htons(ServerPort);
+        		returnValue = connect(hSocket , (struct sockaddr *)&remoteAddr , sizeof(struct sockaddr_in));
+				if(returnValue != -1){
+					char host[128];
+            		char service[128];
+					getnameinfo((struct sockaddr *)&remoteAddr, sizeof remoteAddr, host, (sizeof host), service, sizeof service, 0);
+					printf("\nPuerto: %d, Servicio: %s, Abierto\n", i, service);
+					break;
+				}
+				else{
+					printf("\nPuerto: %d, Cerrado\n", i);
+				}
+			}
+	return returnValue;
 }
 
 
@@ -85,8 +92,20 @@ int main(int argc , char *argv[])
 {
 	int hSocket, read_size;
 	struct sockaddr_in server;
+	struct hostent *host;
 	char SendToServer[100] = {0};
 	char server_reply[200] = {0};
+	char hostAddress;
+
+	printf("Ingrese la direccion IP (o el nombre) del servidor: ");
+    gets(hostAddress);
+    printf("El usuario ingreso %s\n", hostAddress);
+    //Compruebo si ingreso una direccion IP o un nombre
+    if((host = gethostbyname(hostAddress)) == NULL) //Puede resolver el nombre o ip ?
+		{ 
+			printf ("No se puede resolver el nombre o dirección\n");
+			exit(-1);
+		}
 
 	//Crear socket
 	hSocket = SocketCreate();
@@ -99,7 +118,7 @@ int main(int argc , char *argv[])
 	printf("Se creó el socket.\n");
 
 	//Conectarse al servidor remoto
-	if (SocketConnect(hSocket) < 0)
+	if (SocketConnect(hSocket, hostAddress) < 0)
 	{
 		perror("conexión fallida.\n");
 		return 1;
