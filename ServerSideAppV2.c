@@ -4,6 +4,7 @@
 #include<arpa/inet.h> 
 #include<unistd.h>    
 #include<string.h>
+#include<stdlib.h>
 
 short SocketCreate(void)
 {
@@ -20,8 +21,11 @@ int BindCreatedSocket(int hSocket)
 {
 
 	int returnValue=-1;
-	int ClientPort = 90190;     //cambiar, debe ser entre 1100 y 1120
+	int ClientPort;     //cambiar, debe ser entre 1100 y 1120
 	struct sockaddr_in  remoteAddr={0};
+
+	ClientPort = rand() % (1200-1100+1) + 1100;
+	printf("%d", ClientPort);
 
 
 	remoteAddr.sin_family = AF_INET; //IPv4
@@ -88,7 +92,7 @@ int main(int argc , char *argv[])
 	if( recv(sock , client_message , 200 , 0) < 0)
 	{
 		printf("falló recv");
-		break;
+		exit;
 	}
 	
 	printf("Respuesta del cliente: %s\n",client_message);

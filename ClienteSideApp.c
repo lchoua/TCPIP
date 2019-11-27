@@ -33,25 +33,26 @@ int main(int argc, char const *argv[]){
         printf("%c", hostname[i]);
     }
 */
-    printf("Ingrese la direccion IP (o el nombre) del servidor: ");
+    printf("\nIngrese la direccion IP del servidor: ");
     gets(hostname);
     printf("El usuario ingreso %s\n", hostname);
     //Compruebo si ingreso una direccion IP o un nombre
      if(isdigit(hostname[0])){
-            printf("\n Se ha ingresado una direccion IP...\n");
             sa.sin_addr.s_addr = inet_addr(hostname);
         }else{
-            printf("\n Se ha ingresado un nombre...");
-            printf("\n Relizando la traduccion de nombre\n");
+            printf("\nRelizando la traduccion de nombre...\n");
             if((host = gethostbyname(hostname)) != 0){
-                printf("Traduccion correcta");
                 puts(host->h_name);
-                printf("Traduccion:%s",host->h_name);
+                printf("\nTraduccion:%s",host->h_name);
             }else{
                 herror("gethostbyname");
+                return 0;
             }
         }
- 
+    printf("\nIngrese el puerto de inicio de escaneo\n");
+    scanf("%d", &start);
+    printf("Ingrese el puerto de fin de escaneo\n");
+    scanf("%d",&end);
     
 
    //strncpy((char*)(struct sockaddr*) &sa , "" , sizeof sa);
@@ -59,7 +60,7 @@ int main(int argc, char const *argv[]){
    
     
 
-    printf("\nEmpezando el escaneo de puertos entre el %d y el %d: \n", start, end);
+    printf("\nEscaneando los puertos entre el %d y el %d\n", start, end);
     for( i = start ; i <= end ; i++) 
     {
         //Creamos el Socket para IPv4 del tipo Stream
