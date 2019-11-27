@@ -22,7 +22,7 @@ int SocketCreate(void)
 //tratamos de conectarnos con el servidor
 int SocketConnect(char hostAddress[])
 {
-		int i, start=1100, end=1200;
+		int i, start=1100, end=1120;
 		int returnValue=-1;
 		struct sockaddr_in remoteAddr={0};
 		int hSocket;
@@ -31,9 +31,8 @@ int SocketConnect(char hostAddress[])
 				hSocket = socket(AF_INET, SOCK_STREAM, 0);
 				if(hSocket == -1){
 					printf("No se pudo crear el socket.\n");
-					return 1;
+					return hSocket;
 				}
-				printf("Se creó el socket.\n");
 				remoteAddr.sin_addr.s_addr = inet_addr(hostAddress); 
         		remoteAddr.sin_family = AF_INET;   //IPv4
         		remoteAddr.sin_port = htons(i);
@@ -57,7 +56,6 @@ int SocketConnect(char hostAddress[])
 int SocketSend(int hSocket,char Rqst[],short lenRqst)
 
 {
-
         int returnValue = -1;
         struct timeval timeOut;
         timeOut.tv_sec = 20;  // Timeout de 20 segundos
@@ -69,7 +67,6 @@ int SocketSend(int hSocket,char Rqst[],short lenRqst)
           return -1;
         }
         returnValue = send(hSocket , Rqst , lenRqst , 0);
-
         return returnValue;
  }
 
@@ -91,7 +88,7 @@ int SocketReceive(int hSocket,char Rsp[],short RvcSize)
 	}
 	returnValue = recv(hSocket, Rsp , RvcSize , 0);
 
-	printf("La respuesta del servidor es: %s\n",Rsp);
+	printf("La respuesta del servidor es:\n\t\t %s\n",Rsp);
 
 	return returnValue;
  }
@@ -107,11 +104,11 @@ int main(int argc , char *argv[])
 	char server_reply[200] = {0};
 	char hostAddress[16];
 
-	printf("Ingrese la direccion IP (o el nombre) del servidor: ");
+	printf("Ingrese la direccion IP del servidor: ");
     gets(hostAddress);
     printf("El usuario ingreso %s\n", hostAddress);
-    //Compruebo si ingreso una direccion IP o un nombre
-    if((host = gethostbyname(hostAddress)) != 0) //Puede resolver el nombre o ip ?
+    //Compruebo si ingreso una direccion IP 
+    if((host = gethostbyname(hostAddress)) != 0) //Puede resolver la ip ?
 		{
 			puts(host->h_name); 
 		}else{
@@ -128,18 +125,17 @@ int main(int argc , char *argv[])
 
 	printf("Se conectó satisfactoriamente al servidor.\n");
 
-	printf("Enviar el mensaje: ");
-	gets(SendToServer);
-
-	//Mandamos los datos al servidor
-	SocketSend(hSocket , SendToServer , strlen(SendToServer));
-
-
     //Recibimos los datos del servidor
 	read_size = SocketReceive(hSocket , server_reply , 200);
-	
-	printf("Respuesta del servidor: %s\n\n",server_reply);
-
+	if(read_size > 0){
+		memset(server_reply,0,strlen(server_reply)); //Limipio el mensaje
+		printf("Ingresar el mensaje que desea enviar: ");
+		gets(SendToServer);
+		//Mandamos los datos al servidor
+		SocketSend(hSocket , SendToServer , strlen(SendToServer));
+		//Recibimos los datos del servidor
+		read_size = SocketReceive(hSocket , server_reply , 200);
+	}
 
 	close(hSocket);
 	shutdown(hSocket,0);

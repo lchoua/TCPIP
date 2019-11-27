@@ -23,8 +23,9 @@ int BindCreatedSocket(int hSocket)
 	int returnValue=-1;
 	int ClientPort;     //cambiar, debe ser entre 1100 y 1120
 	struct sockaddr_in  remoteAddr={0};
+	
 
-	ClientPort = rand() % (1200-1100+1) + 1100;
+	ClientPort = rand() % (1120-1100+1) + 1100;
 	printf("%d", ClientPort);
 
 
@@ -43,7 +44,9 @@ int main(int argc , char *argv[])
 	struct sockaddr_in server , client;
 	char client_message[200]={0};
 	char message[100] = {0};
-	const char *pMessage = "Hola, Bienvenido!";
+	strcpy(message,"Hola, Bienvenido al Servidor para TCP/IP 2019! Ingrese una cadena...");
+	int j=0;
+	char ch;
 
 	//Creamos socket
 	socket_desc = SocketCreate();
@@ -57,8 +60,7 @@ int main(int argc , char *argv[])
 
 
 	//Bind
-	if( BindCreatedSocket(socket_desc) < 0)
-	{
+	if( BindCreatedSocket(socket_desc) < 0){
 	 //error si falla el bind
 	 perror("Falló el bind.");
 	 return 1;
@@ -70,55 +72,51 @@ int main(int argc , char *argv[])
 
 	//Espera la conexion entrante
 
-	while(1)
-	{
+	while(1){
 
-	printf("Esperando por conexiones entrantes...\n");
-	clientLen = sizeof(struct sockaddr_in);
+		printf("Esperando por conexiones entrantes...\n");
+		clientLen = sizeof(struct sockaddr_in);
 
-	//Acepta conexion de un cliente entrante
-	sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&clientLen);
-	if (sock < 0)
-	{
-	 perror("Falló el accept");
-	 return 1;
-	}
-	printf("Conexión aceptada\n");
+		//Acepta conexion de un cliente entrante
+		sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&clientLen);
+		if (sock < 0){
+			perror("Falló el accept");
+			return 1;
+		}else{
+			printf("Conexión aceptada\n");
+			printf("La IP del cliente es: %s", inet_ntoa(client.sin_addr));
+			break;
+		}
     }
-
+	
+	
+	if(send(sock , message , strlen(message) , 0) < 0){
+		printf("Enviar falló");
+		return 1;
+	}
     memset(client_message,'\0', sizeof client_message);
 	memset(message, '\0', sizeof message);
 	//Recibir una respuesta del cliente
-	if( recv(sock , client_message , 200 , 0) < 0)
-	{
+	if( recv(sock , client_message , 200 , 0) < 0){
 		printf("falló recv");
 		exit;
 	}
-	
-	printf("Respuesta del cliente: %s\n",client_message);
+	printf("Mensaje del  cliente: %s\n",client_message);
 
+	while (client_message[j]) { //Transformo el mensaje a mayusculas
+        ch = client_message[j]; 
+        client_message[j] = toupper(ch) ; 
+        j++; 
+    }
 
-	if(strcmp(pMessage,client_message)==0)
-	{
-
-	 strcpy(message,"Hola, Bienvenido cliente!");
-	}
-	else
-	{
-
-	  strcpy(message,"Mensaje inválido!");
-
-	}
-
-	//Mandar Datos
-	if( send(sock , message , strlen(message) , 0) < 0)
-	{
+	//Mandar cadena recibida en mayuscuslas
+	if( send(sock , client_message , strlen(client_message) , 0) < 0){
 		printf("Enviar falló");
+		close(sock);
 		return 1;
 	}
 
 	close(sock);
-	sleep(1);
-	
+	sleep(1);	
     return 0;
 }
