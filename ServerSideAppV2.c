@@ -26,7 +26,7 @@ int BindCreatedSocket(int hSocket)
 	
 
 	ClientPort = rand() % (1120-1100+1) + 1100;
-	printf("%d", ClientPort);
+	printf("Puerto %d abierto para recibir conexiones\n", ClientPort);
 
 
 	remoteAddr.sin_family = AF_INET; //IPv4
@@ -62,10 +62,10 @@ int main(int argc , char *argv[])
 	//Bind
 	if( BindCreatedSocket(socket_desc) < 0){
 	 //error si falla el bind
-	 perror("Falló el bind.");
+	 perror("\nFalló el bind.");
 	 return 1;
 	}
-	printf("Bind realizado.\n");
+	printf("\nBind realizado.\n");
 
 	//Listen
 	listen(socket_desc , 3);
@@ -75,6 +75,7 @@ int main(int argc , char *argv[])
 	while(1){
 
 		printf("Esperando por conexiones entrantes...\n");
+		printf("----------------------------------------------------------------\n\n");
 		clientLen = sizeof(struct sockaddr_in);
 
 		//Acepta conexion de un cliente entrante
@@ -83,8 +84,9 @@ int main(int argc , char *argv[])
 			perror("Falló el accept");
 			return 1;
 		}else{
-			printf("Conexión aceptada\n");
-			printf("La IP del cliente es: %s", inet_ntoa(client.sin_addr));
+			printf("\nConexión aceptada\n");
+			printf("\n\tLa IP del cliente es: %s\n", inet_ntoa(client.sin_addr));
+			printf("\n\tEl puerto del cliente es: %d\n", (int) ntohs (client.sin_port));
 			break;
 		}
     }
@@ -101,13 +103,15 @@ int main(int argc , char *argv[])
 		printf("falló recv");
 		exit;
 	}
-	printf("Mensaje del  cliente: %s\n",client_message);
+	printf("\n\tMensaje recibido del cliente: %s\n",client_message);
 
 	while (client_message[j]) { //Transformo el mensaje a mayusculas
         ch = client_message[j]; 
         client_message[j] = toupper(ch) ; 
         j++; 
     }
+
+	printf("\n\tMensaje luego de procesamiento en el servidor: %s\n\n", client_message);
 
 	//Mandar cadena recibida en mayuscuslas
 	if( send(sock , client_message , strlen(client_message) , 0) < 0){
